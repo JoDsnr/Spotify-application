@@ -3,12 +3,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 
+
 function App() {
   const [apiData, setApiData] = useState([]);
 
   useEffect(() => {
     // Make a GET request to your Flask API endpoint
-    axios.get('http://localhost:5000/dashboard', { maxRedirects: 5 })
+    axios.get('/dashboard', { maxRedirects: 5 })
       .then(response => {
       // Log the received data to the console
       console.log('Data from Flask API:', response.data);

@@ -1,19 +1,17 @@
-
-
 import time
 import yaml
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from flask import Flask, request, url_for, session, redirect
 from flask.json import jsonify
-from flask_cors import CORS, cross_origin 
+from flask_cors import CORS 
 
 # initialize Flask app
 app = Flask(__name__)
 CORS(app)
 
 app.config['SESSION_COOKIE_NAME'] = 'Spotify Cookie'
-app.secret_key = 'zadnjkfmb@dhf2d45cscozdiho3 3vnzo4tnv'
+app.secret_key = 'zadnjkfmb@dhf2d45cscozdiho3vnzo4tnv'
 
 # set the key for the token info in the session dictionary
 TOKEN_INFO = 'token_info'
@@ -29,7 +27,7 @@ REDIRECT_URI = config['REDIRECT_URI']
 
 
 # route to handle the login
-@cross_origin
+
 @app.route('/')
 def login():
     # create a SpotifyOAuth instance and get the authorization URL
@@ -39,7 +37,7 @@ def login():
     return redirect(auth_url)
 
 # route to handle the redirect URI after authorization
-@cross_origin
+
 @app.route('/redirect')
 def redirect_page():
     # clear the session
@@ -51,12 +49,11 @@ def redirect_page():
     # save the token info in the session
     session[TOKEN_INFO] = token_info
 
-    print(f'session TOKEN : {token_info}')
-    # redirect the user to the save_discover_weekly route
+    # redirect the user to the dashboard_viz route
     return redirect(url_for('dashboard_viz',_external=True))
 
 # route to dashboard data 
-@cross_origin
+
 @app.route('/dashboard')
 def dashboard_viz():
     try: 
@@ -72,7 +69,6 @@ def dashboard_viz():
     
     sp = spotipy.Spotify(auth=token_info['access_token'])
     top_artists = sp.current_user_top_artists(limit=5, time_range='medium_term')
-    # print(top_artists)
     top_artists_names = [artist['name'] for artist in (top_artists['items'])]
 
     return jsonify({'top_artists': top_artists_names})
@@ -82,7 +78,6 @@ def dashboard_viz():
 def get_token():
     token_info = session.get(TOKEN_INFO, None)
     if not token_info:
-        print('Get Token Info:', token_info)
         # if the token info is not found, redirect the user to the login route
         return redirect(url_for('login', _external=False))
     
