@@ -23,5 +23,6 @@ yarn-error.log*
 .cache
 exploration.ipynb
 venv
+/spot_env
 config.yaml
 .env
