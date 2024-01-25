@@ -86,11 +86,11 @@ def get_token():
 
 def create_spotify_oauth():
     scope = 'user-top-read'
-
+    print(url_for('redirect_page', _external=True))
     return SpotifyOAuth(
         client_id=ApplicationConfig.CLIENT_ID,
         client_secret=ApplicationConfig.CLIENT_SECRET,
-        redirect_uri=ApplicationConfig.REDIRECT_URI,
+        redirect_uri=url_for('redirect_page', _external=True),
         scope=scope,
         show_dialog=True 
     )
