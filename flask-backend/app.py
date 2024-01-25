@@ -1,38 +1,33 @@
+
+from config import ApplicationConfig
 import time
-import yaml
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from flask import Flask, request, url_for, session, redirect
 from flask.json import jsonify
 from flask_cors import CORS 
+from flask_session import Session
+from flask_bcrypt import Bcrypt
+
+
 
 # initialize Flask app
 app = Flask(__name__)
-CORS(app)
+app.config.from_object(ApplicationConfig)
 
-app.config['SESSION_COOKIE_NAME'] = 'Spotify Cookie'
-app.secret_key = 'zadnjkfmb@dhf2d45cscozdiho3vnzo4tnv'
+bcrypt = Bcrypt(app)
+CORS(app)
+#server_session = Session(app)
 
 # set the key for the token info in the session dictionary
 TOKEN_INFO = 'token_info'
 
-with open('config.yaml', 'r') as config_file:
-        config = yaml.safe_load(config_file)
-
-CLIENT_ID = config['CLIENT_ID']
-CLIENT_SECRET = config['CLIENT_SECRET']
-REDIRECT_URI = config['REDIRECT_URI']
-
-
-
-
 # route to handle the login
-
 @app.route('/')
 def login():
     # create a SpotifyOAuth instance and get the authorization URL
     auth_url = create_spotify_oauth().get_authorize_url()
-    print(f'Auth url : {auth_url}')
+    
     # redirect the user to the authorization URL
     return redirect(auth_url)
 
@@ -65,7 +60,6 @@ def dashboard_viz():
         print('User not logged in')
         return redirect("/")
     
-    print('Token Info:', token_info)
     
     sp = spotipy.Spotify(auth=token_info['access_token'])
     top_artists = sp.current_user_top_artists(limit=5, time_range='medium_term')
@@ -94,10 +88,11 @@ def create_spotify_oauth():
     scope = 'user-top-read'
 
     return SpotifyOAuth(
-        client_id = CLIENT_ID,
-        client_secret = CLIENT_SECRET,
-        redirect_uri = REDIRECT_URI,
-        scope= scope
+        client_id=ApplicationConfig.CLIENT_ID,
+        client_secret=ApplicationConfig.CLIENT_SECRET,
+        redirect_uri=ApplicationConfig.REDIRECT_URI,
+        scope=scope,
+        show_dialog=True 
     )
 
 app.run(debug=True)
