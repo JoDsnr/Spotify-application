@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './App.css';
-
+import './Dashboard.css';
 
 function App() {
   const [apiData, setApiData] = useState([]);
@@ -23,16 +22,23 @@ function App() {
 
   return (
     <div className="App">
-      <header className="App-header">
-        <p>
-          Data from Flask API:
-        </p>
-        <ul>
-          {apiData.map(item => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-      </header>
+      <div className="left-sidebar">
+        {/* Add your content for the left sidebar here */}
+        <p>Left Sidebar Content</p>
+        {/* Add any additional components or links for the left sidebar */}
+      </div>
+      <div className="main-content">
+        <header className="App-header">
+          <p>
+            Data from Flask API:
+          </p>
+          <ul>
+            {apiData.map(item => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </header>
+      </div>
     </div>
   );
 }

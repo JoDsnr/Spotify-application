@@ -1,0 +1,26 @@
+body {
+  background-color: #000000;
+}
+
+.App {
+  display: grid;
+  height: 100%;
+  grid-template-columns: 25% 74%;
+  grid-gap: 1%;
+  padding: 1%;
+}
+
+.left-sidebar {
+  background-color: #333;
+  padding: 20px;
+  color: #fff;
+  border-radius: 10px 10px 0 0; /* top-left and bottom-left corners */
+}
+
+.main-content {
+  flex-grow: 1;
+  background-color: #333;
+  padding: 20px;
+  color: #fff;
+  border-radius: 10px 10px 0 0; /* top-right and bottom-right corners */
+}

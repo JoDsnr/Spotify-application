@@ -2,13 +2,15 @@
 from config import ApplicationConfig
 import time
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth
-from flask import Flask, request, url_for, session, redirect
+from spotipy.exceptions import SpotifyException
+from flask import Flask, request, url_for, session, redirect, Response
 from flask.json import jsonify
 from flask_cors import CORS 
 from flask_session import Session
 from flask_bcrypt import Bcrypt
-
+from models import db, User
+from scripts.authentification import create_auth_url, get_token_from_code, get_token_from_session, set_token
+import requests
 
 
 # initialize Flask app
@@ -16,36 +18,104 @@ app = Flask(__name__)
 app.config.from_object(ApplicationConfig)
 
 bcrypt = Bcrypt(app)
-CORS(app)
+CORS(app, supports_credentials=True)
 #server_session = Session(app)
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
+
 
 # set the key for the token info in the session dictionary
 TOKEN_INFO = 'token_info'
 
-# route to handle the login
-@app.route('/')
-def login():
-    # create a SpotifyOAuth instance and get the authorization URL
-    auth_url = create_spotify_oauth().get_authorize_url()
-    
-    # redirect the user to the authorization URL
-    return redirect(auth_url)
 
-# route to handle the redirect URI after authorization
+@app.route("/@me")
+def get_current_user():
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    user = User.query.filter_by(id=user_id).first()
+    return jsonify({
+        "id": user.id,
+        "email": user.email
+    }) 
+
+@app.route("/register", methods=["POST"])
+def register_user():
+    email = request.json["email"]
+    password = request.json["password"]
+
+    user_exists = User.query.filter_by(email=email).first() is not None
+
+    if user_exists:
+        return jsonify({"error": "User already exists"}), 409
+
+    hashed_password = bcrypt.generate_password_hash(password)
+    new_user = User(email=email, password=hashed_password)
+    db.session.add(new_user)
+    db.session.commit()
+    
+    session["user_id"] = new_user.id
+
+    # create a SpotifyOAuth instance and get the authorization URL
+    auth_url = create_auth_url()
+
+    return jsonify({
+        "id": new_user.id,
+        "email": new_user.email,
+        "spotifyAuthorizationUrl": auth_url
+    })
+    # return redirect(auth_url)
+
+
+
+
+@app.route("/login", methods=["POST"])
+def login_user():
+    email = request.json["email"]
+    password = request.json["password"]
+
+    user = User.query.filter_by(email=email).first()
+
+    if user is None:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    if not bcrypt.check_password_hash(user.password, password):
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    session["user_id"] = user.id
+
+    return jsonify({
+        "id": user.id,
+        "email": user.email
+    })
+
+
 
 @app.route('/redirect')
-def redirect_page():
-    # clear the session
+def callback() -> Response:
     session.clear()
-    # get the authorization code from the request parameters
-    code = request.args.get('code')
-    # exchange the authorization code for an access token and refresh token
-    token_info = create_spotify_oauth().get_access_token(code)
-    # save the token info in the session
-    session[TOKEN_INFO] = token_info
-
-    # redirect the user to the dashboard_viz route
-    return redirect(url_for('dashboard_viz',_external=True))
+    if 'error' in request.args:
+        # Handle authorization errors
+        error_message = request.args['error']
+        return jsonify({'error': error_message}), 400  
+    elif 'code' in request.args:
+        # Authorization code received, proceed with token exchange
+        try:
+            token_info = get_token_from_code(code=request.args['code'])
+            set_token(token_info)
+            # return redirect(url_for('dashboard_viz', _external=True))
+            return redirect('http://localhost:3000/dashboard')
+        
+        except requests.exceptions.HTTPError as http_err:
+            return jsonify({'error': f'HTTP error occurred: {http_err}'}), 500
+        except SpotifyException as spot_err:
+            return jsonify({'error': f'Spotify API error occurred: {spot_err}'}), 500
+        except Exception as err:
+            return jsonify({'error': f'Unexpected error occurred: {err}'}), 500
 
 # route to dashboard data 
 
@@ -53,7 +123,7 @@ def redirect_page():
 def dashboard_viz():
     try: 
         # get the token info from the session
-        token_info = get_token()
+        token_info = get_token_from_session()
 
     except:
         # if the token info is not found, redirect the user to the login route
@@ -68,32 +138,12 @@ def dashboard_viz():
     return jsonify({'top_artists': top_artists_names})
 
 
-# function to get the token info from the session
-def get_token():
-    token_info = session.get(TOKEN_INFO, None)
-    if not token_info:
-        # if the token info is not found, redirect the user to the login route
-        return redirect(url_for('login', _external=False))
-    
-    # check if the token is expired and refresh it if necessary
-    now = int(time.time())
-    is_expired = token_info['expires_at'] - now < 60
-    if(is_expired):
-        spotify_oauth = create_spotify_oauth()
-        token_info = spotify_oauth.refresh_access_token(token_info['refresh_token'])
 
-    return token_info
+@app.route("/logout", methods=["POST"])
+def logout_user():
+    session.pop("user_id")
+    return "200"
 
-def create_spotify_oauth():
-    scope = 'user-top-read'
-    print(url_for('redirect_page', _external=True))
-    return SpotifyOAuth(
-        client_id=ApplicationConfig.CLIENT_ID,
-        client_secret=ApplicationConfig.CLIENT_SECRET,
-        redirect_uri=url_for('redirect_page', _external=True),
-        scope=scope,
-        show_dialog=True 
-    )
 
 app.run(debug=True)
 

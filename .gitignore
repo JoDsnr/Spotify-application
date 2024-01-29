@@ -26,3 +26,5 @@ venv
 /spot_env
 config.yaml
 .env
+/flask-backend/Spotify Account Data
+/instance
