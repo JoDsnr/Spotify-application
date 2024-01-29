@@ -57,6 +57,3 @@ def refresh_token(refresh_token: str)->Dict[str,str]:
     response = requests.post(ApplicationConfig.TOKEN_URL, data=request_body)
     new_token_info = response.json()
     return new_token_info
-
-
-

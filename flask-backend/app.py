@@ -15,7 +15,6 @@ app = Flask(__name__)
 app.config.from_object(ApplicationConfig)
 
 bcrypt = Bcrypt(app)
-<<<<<<< HEAD
 CORS(app, supports_credentials=True)
 #server_session = Session(app)
 db.init_app(app)
@@ -93,19 +92,6 @@ def login_user():
 
 
 
-=======
-CORS(app)
-
-@app.route('/')
-def hello():
-    return redirect(url_for('login', _external=True))
-
-@app.route('/login')
-def login():
-    auth_url = create_auth_url()
-    return redirect(auth_url)
-
->>>>>>> f9670b91c89aadfd2cdb7bf4f9c3761bee5f4230
 @app.route('/redirect')
 def callback() -> Response:
     session.clear()
@@ -118,12 +104,8 @@ def callback() -> Response:
         try:
             token_info = get_token_from_code(code=request.args['code'])
             set_token(token_info)
-<<<<<<< HEAD
             # return redirect(url_for('dashboard_viz', _external=True))
             return redirect('http://localhost:3000/dashboard')
-=======
-            return redirect(url_for('dashboard_viz', _external=True))
->>>>>>> f9670b91c89aadfd2cdb7bf4f9c3761bee5f4230
         
         except requests.exceptions.HTTPError as http_err:
             return jsonify({'error': f'HTTP error occurred: {http_err}'}), 500
@@ -131,28 +113,15 @@ def callback() -> Response:
             return jsonify({'error': f'Spotify API error occurred: {spot_err}'}), 500
         except Exception as err:
             return jsonify({'error': f'Unexpected error occurred: {err}'}), 500
-<<<<<<< HEAD
 
 # route to dashboard data 
-=======
-        
-@app.route('/home')
-def home():
-    return "Welcome to the app's home page"
-
->>>>>>> f9670b91c89aadfd2cdb7bf4f9c3761bee5f4230
 
 @app.route('/dashboard')
 def dashboard_viz():
     try: 
-<<<<<<< HEAD
         # get the token info from the session
         token_info = get_token_from_session()
 
-=======
-        # get the token info
-        token_info = get_token_from_session()
->>>>>>> f9670b91c89aadfd2cdb7bf4f9c3761bee5f4230
     except:
         print('User not logged in')
         return redirect("/login")
@@ -163,7 +132,6 @@ def dashboard_viz():
 
     return jsonify({'top_artists': top_artists_names})
 
-<<<<<<< HEAD
 
 
 @app.route("/logout", methods=["POST"])
@@ -173,8 +141,6 @@ def logout_user():
 
 
 app.run(debug=True)
-=======
 if __name__ == '__main__':
     app.run(debug=True)
->>>>>>> f9670b91c89aadfd2cdb7bf4f9c3761bee5f4230
 
