@@ -5,6 +5,7 @@ from flask import Flask, request, url_for, session, redirect, Response
 from flask.json import jsonify
 from flask_cors import CORS 
 from flask_bcrypt import Bcrypt
+from flask_session import Session
 from models import db, User
 from scripts.authentification import create_auth_url, get_token_from_code, get_token_from_session, set_token
 import requests
@@ -16,7 +17,7 @@ app.config.from_object(ApplicationConfig)
 
 bcrypt = Bcrypt(app)
 CORS(app, supports_credentials=True)
-#server_session = Session(app)
+server_session = Session(app)
 db.init_app(app)
 
 with app.app_context():
@@ -139,7 +140,7 @@ def dashboard_viz():
     ] 
 
     # Fetch recently played albums
-    recently_played = sp.current_user_recently_played(limit=10)
+    recently_played = sp.current_user_recently_played(limit=20)
     recently_played_data = [
         {
             'album_name': item['track']['album']['name'],

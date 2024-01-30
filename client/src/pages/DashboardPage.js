@@ -6,22 +6,7 @@ import LogoutButton from './elements/LogoutButton';
 
 function App() {
   const [apiData, setApiData] = useState({ top_artists: [], recently_played: [] });
-  const [userEmail, setUserEmail] = useState('');
 
-  useEffect(() => {
-    // Function to fetch user email
-    const fetchUserEmail = async () => {
-      try {
-        const resp = await axios.get('//localhost:5000/@me');
-        setUserEmail(resp.data.email);
-      } catch (error) {
-        console.log('Not authenticated');
-      }
-    };
-
-    // Call the function to fetch user email
-    fetchUserEmail();
-  }, []); 
 
   useEffect(() => {
     // Make a GET request to your Flask API endpoint
@@ -62,7 +47,7 @@ function App() {
       </div>
       <div className="main-content">
         <div className="header-section">
-            <LogoutButton onLogout={handleLogout} userEmail={userEmail} />
+            <LogoutButton onLogout={handleLogout} />
         </div>
         <header className="App-header">
           <div className='banner-content'>
