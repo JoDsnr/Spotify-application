@@ -6,7 +6,7 @@ import requests
 from typing import Dict
 
 def create_auth_url()->str:
-    scope = 'user-top-read'
+    scope = 'user-top-read user-read-recently-played'
 
     params = {
         'client_id': ApplicationConfig.CLIENT_ID,

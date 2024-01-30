@@ -65,7 +65,6 @@ def register_user():
         "email": new_user.email,
         "spotifyAuthorizationUrl": auth_url
     })
-    # return redirect(auth_url)
 
 
 
@@ -128,9 +127,29 @@ def dashboard_viz():
     
     sp = spotipy.Spotify(auth=token_info['access_token'])
     top_artists = sp.current_user_top_artists(limit=5, time_range='medium_term')
-    top_artists_names = [artist['name'] for artist in (top_artists['items'])]
+    # top_artists_names = [artist['name'] for artist in (top_artists['items'])]
 
-    return jsonify({'top_artists': top_artists_names})
+    # Extract relevant information including name and image
+    top_artists_data = [
+        {
+            'name': artist['name'],
+            'image': artist['images'][0]['url'] if artist['images'] else None
+        }
+        for artist in top_artists['items']
+    ] 
+
+    # Fetch recently played albums
+    recently_played = sp.current_user_recently_played(limit=10)
+    recently_played_data = [
+        {
+            'album_name': item['track']['album']['name'],
+            'artist_name': item['track']['artists'][0]['name'],
+            'image': item['track']['album']['images'][0]['url'] if item['track']['album']['images'] else None
+        }
+        for item in recently_played['items']
+    ]   
+
+    return jsonify({'top_artists': top_artists_data, 'recently_played': recently_played_data})
 
 
 

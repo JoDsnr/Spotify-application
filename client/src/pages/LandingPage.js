@@ -19,7 +19,7 @@ const LandingPage = () => {
         console.log('Not authenticated');
       }
     })();
-  }, []); // Add setUser to the dependency array
+  }, []);
 
   return (
     <div>
