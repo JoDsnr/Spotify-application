@@ -6,9 +6,11 @@ from flask.json import jsonify
 from flask_cors import CORS 
 from flask_bcrypt import Bcrypt
 from flask_session import Session
-from models import db, User
+from models import db, User, SpotifyHistory
 from scripts.authentification import create_auth_url, get_token_from_code, get_token_from_session, set_token
+from scripts.spotify_history import add_spotify_history_from_json
 import requests
+from collections import Counter
 
 
 # initialize Flask app
@@ -20,12 +22,16 @@ CORS(app, supports_credentials=True)
 server_session = Session(app)
 db.init_app(app)
 
+# Call the function to add Spotify history from JSON files
 with app.app_context():
     db.create_all()
+    # Check if the function has been called
+    if not app.config.get('SPOTIFY_HISTORY_ADDED'):
+        # Call the function to add Spotify history from JSON files
+        add_spotify_history_from_json()
 
-
-# set the key for the token info in the session dictionary
-TOKEN_INFO = 'token_info'
+        # Set the flag to indicate that the function has been called
+        app.config['SPOTIFY_HISTORY_ADDED'] = True
 
 
 @app.route("/@me")
@@ -36,11 +42,15 @@ def get_current_user():
         return jsonify({"error": "Unauthorized"}), 401
     
     user = User.query.filter_by(id=user_id).first()
-    return jsonify({
-        "id": user.id,
-        "email": user.email
-    }) 
-
+    if user:
+        return jsonify({
+            "id": user.id,
+            "email": user.email
+        })
+    else:
+        return jsonify({"error": "User not found"}), 404
+    
+    
 @app.route("/register", methods=["POST"])
 def register_user():
     email = request.json["email"]
@@ -94,7 +104,6 @@ def login_user():
 
 @app.route('/redirect')
 def callback() -> Response:
-    session.clear()
     if 'error' in request.args:
         # Handle authorization errors
         error_message = request.args['error']
@@ -127,30 +136,52 @@ def dashboard_viz():
         return redirect("/login")
     
     sp = spotipy.Spotify(auth=token_info['access_token'])
-    top_artists = sp.current_user_top_artists(limit=5, time_range='medium_term')
-    # top_artists_names = [artist['name'] for artist in (top_artists['items'])]
+    top_artists = sp.current_user_top_artists(limit=5, time_range='short_term')
 
     # Extract relevant information including name and image
     top_artists_data = [
         {
             'name': artist['name'],
-            'image': artist['images'][0]['url'] if artist['images'] else None
+            'image': artist['images'][0]['url'] if artist['images'] else None,
+            'genres': artist['genres']
         }
         for artist in top_artists['items']
     ] 
 
     # Fetch recently played albums
-    recently_played = sp.current_user_recently_played(limit=20)
+    recently_played = sp.current_user_recently_played(limit=50)
+
     recently_played_data = [
         {
             'album_name': item['track']['album']['name'],
             'artist_name': item['track']['artists'][0]['name'],
+            'song_name': item['track']['name'],
             'image': item['track']['album']['images'][0]['url'] if item['track']['album']['images'] else None
         }
         for item in recently_played['items']
     ]   
 
-    return jsonify({'top_artists': top_artists_data, 'recently_played': recently_played_data})
+
+    # Find the most listened albums based on frequency
+    album_counts = Counter(album['album_name'] for album in recently_played_data)
+
+    # Get unique albums with their play counts and image URLs
+    unique_albums = [
+        {
+            'album_name': album_name,
+            'play_count': album_counts[album_name],
+            'image': next((album['image'] for album in recently_played_data if album['album_name'] == album_name), None)
+        }
+        for album_name in album_counts
+    ]
+
+    # Sort unique albums based on play count in descending order
+    sorted_most_listened_albums = sorted(unique_albums, key=lambda x: x['play_count'], reverse=True)
+
+    # Extract the most listened albums
+    most_listened_albums = sorted_most_listened_albums
+
+    return jsonify({'top_artists': top_artists_data, 'recently_played': recently_played_data, 'most_listened_albums': most_listened_albums})
 
 
 

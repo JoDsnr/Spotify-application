@@ -6,8 +6,6 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
 
   const logInUser = async () => {
-    console.log(email, password);
-
     try {
       const resp = await httpClient.post("//localhost:5000/login", {
         email,
@@ -32,7 +30,6 @@ const LoginPage = () => {
             type="text"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            id=""
           />
         </div>
         <div>
@@ -41,7 +38,6 @@ const LoginPage = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            id=""
           />
         </div>
         <button type="button" onClick={() => logInUser()}>

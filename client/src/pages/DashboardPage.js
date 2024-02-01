@@ -1,11 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Slider from 'react-slick';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
 import './Dashboard.css';
 import LogoutButton from './elements/LogoutButton';
 
 function App() {
-  const [apiData, setApiData] = useState({ top_artists: [], recently_played: [] });
+  const [apiData, setApiData] = useState({ top_artists: [], recently_played: [], most_listened_albums: [] });
 
 
   useEffect(() => {
@@ -30,26 +33,52 @@ function App() {
     window.location.href = '/';
   };
 
+  const renderCarouselItems = () => {
+    return apiData.most_listened_albums.map(album => (
+      <div key={album.album_name}>
+        <img src={album.image} alt={album.album_name} />
+      </div>
+    ));
+  };
+
+  const settings = {
+    dots: false,
+    infinite: true,
+    autoplay: true,
+    autoplaySpeed: 0,
+    speed:2000,
+    slidesToShow: 7,
+    slidesToScroll: 1,
+    arrows: false,
+  };
+
   
   return (
     <div className="App">
       <div className="left-sidebar">
-      <div className='sidebarheader-content'>Recently Played</div>
-        {apiData.recently_played.map(album => (
-          <div className="recently-played-card" key={album.album_name}>
-            {album.image && <img src={album.image} alt={album.album_name} />}
-            <div className="recently-played-card-info">
-              <p className="album-name">{album.album_name}</p>
-              <p className="artist-name">{album.artist_name}</p>
+        <div className='sidebarheader-content'>Home</div>
+        <div className='sidebarheader-content'>Recently Played</div>
+        <div className='recently-played'>
+            {apiData.recently_played.map(song => (
+            <div className="recently-played-card" key={song.song_name}>
+              {song.image && <img src={song.image} alt={song.song_name} />}
+              <div className="recently-played-card-info">
+                <p className="song-name">{song.song_name}</p>
+                <p className="artist-name">{song.artist_name}</p>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-      <div className="main-content">
-        <div className="header-section">
-            <LogoutButton onLogout={handleLogout} />
+          ))}
         </div>
-        <header className="App-header">
+      </div>
+        <div className="main-content">
+          <div className="header-section">
+              <LogoutButton onLogout={handleLogout} />
+          </div>
+          <div className='carousel-container'>
+            <Slider {...settings}>
+              {renderCarouselItems()}
+            </Slider>
+          </div>
           <div className='banner-content'>
             Your favorite artists
           </div>
@@ -61,9 +90,8 @@ function App() {
               </div>
             ))}
           </div>
-        </header>
+        </div>
       </div>
-    </div>
   );
 }
 

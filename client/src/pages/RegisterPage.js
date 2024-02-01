@@ -34,7 +34,6 @@ const RegisterPage = () => {
             type="text"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            id=""
           />
         </div>
         <div>
@@ -43,7 +42,6 @@ const RegisterPage = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            id=""
           />
         </div>
         <button type="button" onClick={() => registerUser()}>
