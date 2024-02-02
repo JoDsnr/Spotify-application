@@ -11,6 +11,7 @@ from scripts.authentification import create_auth_url, get_token_from_code, get_t
 from scripts.spotify_history import add_spotify_history_from_json
 import requests
 from collections import Counter
+from sqlalchemy import func
 
 
 # initialize Flask app
@@ -50,7 +51,7 @@ def get_current_user():
     else:
         return jsonify({"error": "User not found"}), 404
     
-    
+
 @app.route("/register", methods=["POST"])
 def register_user():
     email = request.json["email"]
@@ -181,7 +182,47 @@ def dashboard_viz():
     # Extract the most listened albums
     most_listened_albums = sorted_most_listened_albums
 
-    return jsonify({'top_artists': top_artists_data, 'recently_played': recently_played_data, 'most_listened_albums': most_listened_albums})
+    subquery = db.session.query(
+        func.substr(SpotifyHistory.endTime, 1, 7).label('year_month'),
+        SpotifyHistory.artistName,
+        func.sum(SpotifyHistory.msPlayed).label('total_ms_played'),
+        func.row_number().over(
+            partition_by=func.substr(SpotifyHistory.endTime, 1, 7),
+            order_by=func.sum(SpotifyHistory.msPlayed).desc()
+        ).label('rank')
+    ).group_by('year_month', 'artistName').subquery()
+
+    most_listened_artists = db.session.query(
+        subquery.c.year_month,
+        subquery.c.artistName,
+        subquery.c.total_ms_played
+    ).filter(subquery.c.rank == 1).all()
+
+    # Format the result as a list of dictionaries
+    result = [
+        {
+            'year_month': entry.year_month,
+            'artistName': entry.artistName,
+            'total_ms_played': entry.total_ms_played
+        }
+        for entry in most_listened_artists
+    ]
+    
+    # Function to get the artist image URL from Spotify API using Spotipy
+    def get_artist_image_url(artist_name, sp):
+        results = sp.search(q=f'artist:{artist_name}', type='artist', limit=1)
+
+        if 'artists' in results and 'items' in results['artists'] and results['artists']['items']:
+            return results['artists']['items'][0]['images'][0]['url']  # Assuming you want the first image
+        return None
+    
+    for entry in result:
+        artist_name = entry['artistName']
+        artist_image_url = get_artist_image_url(artist_name, sp)
+        entry['artist_image_url'] = artist_image_url
+
+
+    return jsonify({'top_artists': top_artists_data, 'recently_played': recently_played_data, 'most_listened_albums': most_listened_albums, 'most_listened_artists_by_month': result})
 
 
 

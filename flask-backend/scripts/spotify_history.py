@@ -13,7 +13,7 @@ def add_spotify_history_from_json():
     with app.app_context():
         # Iterate through each JSON file in the folder
         for file_name in os.listdir(json_folder_path):
-            if file_name.startswith("StreamingHistory_music_0"):
+            if file_name.startswith("StreamingHistory_music"):
                 file_path = os.path.join(json_folder_path, file_name)
 
                 # Open the JSON file and load the data
