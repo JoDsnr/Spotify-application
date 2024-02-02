@@ -6,9 +6,11 @@ import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import './Dashboard.css';
 import LogoutButton from './elements/LogoutButton';
+import RenderTimelineCards from './elements/renderTimelineCards';
+
 
 function App() {
-  const [apiData, setApiData] = useState({ top_artists: [], recently_played: [], most_listened_albums: [] });
+  const [apiData, setApiData] = useState({ top_artists: [], recently_played: [], most_listened_albums: [], most_listened_artists_by_month: [] });
 
 
   useEffect(() => {
@@ -25,13 +27,6 @@ function App() {
       });
   }, []); // Empty dependency array to run the effect only once on component mount
 
-
-
-  const handleLogout = () => {
-    // Implement logout logic here
-    // For example, you can redirect the user to the logout endpoint
-    window.location.href = '/';
-  };
 
   const renderCarouselItems = () => {
     return apiData.most_listened_albums.map(album => (
@@ -51,6 +46,8 @@ function App() {
     slidesToScroll: 1,
     arrows: false,
   };
+
+
 
   
   return (
@@ -72,7 +69,7 @@ function App() {
       </div>
         <div className="main-content">
           <div className="header-section">
-              <LogoutButton onLogout={handleLogout} />
+              <LogoutButton />
           </div>
           <div className='carousel-container'>
             <Slider {...settings}>
@@ -89,6 +86,12 @@ function App() {
                 <p>{artist.name}</p>
               </div>
             ))}
+          </div>
+          <div className="artist-timeline">
+            <RenderTimelineCards apiData={apiData} />
+          </div>
+          <div className="footer">
+              <p>Your footer content goes here.</p>
           </div>
         </div>
       </div>

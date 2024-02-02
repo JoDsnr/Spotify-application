@@ -35,10 +35,6 @@ body {
 
 /* section for the recently played album card */
 
-.recently-played {
-  margin-top: 2%;
-  overflow: hidden;
-}
 
 
 .recently-played {
@@ -102,7 +98,9 @@ body {
 /* main content section */
 
 .main-content {
-  flex-grow: 1;
+  display: grid;
+  grid-template-rows: auto auto auto auto auto auto; /* Adjust as needed */
+  grid-template-columns: 1fr;
   background-color: #232323;
   padding: 1% 1% 0 1%;
   color: #fff;
@@ -170,3 +168,41 @@ body {
 .artist-card p {
   font-weight: bold;
 }
+
+/* timeline section */
+
+
+.artist-timeline {
+  margin: 5% 0% 5% 1%;
+  width: 100%;
+  height: auto;
+  white-space: nowrap;
+  position: relative;
+  overflow-x: scroll;
+  overflow-y: hidden;
+}
+
+.artist-timeline div {
+  width: 15%;
+  display: inline-block;
+  white-space: normal;
+}
+
+.artist-timeline::-webkit-scrollbar {
+  width: 5px; /* Adjust the width of the scrollbar */
+}
+
+.artist-timeline::-webkit-scrollbar-thumb {
+  background-color: #888; /* Color of the scrollbar thumb */
+  border-radius: 5px; /* Round the corners of the scrollbar thumb */
+}
+
+
+
+
+
+.footer {
+  padding: 20px;
+  text-align: center;
+}
+
