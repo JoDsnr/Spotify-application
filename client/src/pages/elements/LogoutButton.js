@@ -7,7 +7,7 @@ import httpClient from '../../httpClient';
 
 import './LogoutButton.css';
 
-function LogoutButton({ userEmail }) {
+function LogoutButton() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [user, setUser] = useState(null);
 
@@ -30,8 +30,6 @@ function LogoutButton({ userEmail }) {
     await httpClient.post('//localhost:5000/logout');
     window.location.href = '/';
   };
-
-
 
 
   return (
